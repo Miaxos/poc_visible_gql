@@ -1,0 +1,18 @@
+[package]
+name = "poc_graphql_two_types"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1"
+async-graphql = { path="../async-graphql/" }
+async-graphql-warp = { path="../async-graphql/integrations/warp/" }
+chrono = "0.4"
+futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+warp = "0.3"                  # serve the web at warp speeds
+rand = "0.8"
