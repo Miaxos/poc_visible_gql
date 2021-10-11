@@ -1,17 +1,9 @@
 //! The whole idea is to:
-//! Have a way to hide things from an union
-//! Union qui va dépendre du contexte au final, dans l'idée on va pourvoir filer un truc pendant
-//! l'execution de la requete qui va altérer le résultat de l'introspection.
-//!
-//! -> Besoin d'une info supplémentaire pour la présence ou non d'un champ.
-//!
-//!
-//!
-//! TODO: Permettre d'avoir des visible sur les fields d'une union
+//! Have a way to hide things from an union to support multiple representation.
 
 #![feature(trace_macros)]
-
 trace_macros!(true);
+
 use async_graphql::{
     Context, EmptyMutation, EmptySubscription, FieldResult, Object, Schema, SimpleObject, Union,
 };
@@ -58,7 +50,14 @@ pub struct Query;
 #[Object]
 impl Query {
     async fn test<'ctx>(&self, ctx: &'ctx Context<'_>) -> FieldResult<Duration> {
-        todo!()
+        let preview = ctx.data::<PreviewsSettings>()?;
+
+        match (preview.machine_rpz, preview.human_rpz) {
+            // Just an example, should use an enum
+            (true, false) => Ok(Duration::MachineDuration(MachineDuration { value_b: 12 })),
+            (false, true) => Ok(Duration::HumanDuration(HumanDuration { value_a: 12 })),
+            _ => Err("blbl".into()),
+        }
     }
 }
 
