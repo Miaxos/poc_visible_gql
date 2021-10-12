@@ -11,19 +11,36 @@ use warp::Filter;
 
 fn machine_rpz<'ctx>(ctx: &'ctx Context<'_>) -> bool {
     ctx.data::<PreviewsSettings>()
-        .map(|x| x.machine_rpz)
+        .map(|x| x.statut() == PreviewStatut::MACHINE)
         .unwrap_or(false)
 }
 
 fn human_rpz<'ctx>(ctx: &'ctx Context<'_>) -> bool {
     ctx.data::<PreviewsSettings>()
-        .map(|x| x.human_rpz)
+        .map(|x| x.statut() == PreviewStatut::HUMAN)
         .unwrap_or(false)
+}
+
+#[derive(PartialEq, Eq)]
+enum PreviewStatut {
+    MACHINE,
+    HUMAN,
+    NONE,
 }
 
 struct PreviewsSettings {
     pub machine_rpz: bool,
     pub human_rpz: bool,
+}
+
+impl PreviewsSettings {
+    fn statut(&self) -> PreviewStatut {
+        match (self.machine_rpz, self.human_rpz) {
+            (true, _) => PreviewStatut::MACHINE,
+            (_, true) => PreviewStatut::HUMAN,
+            (_, _) => PreviewStatut::NONE,
+        }
+    }
 }
 
 #[derive(SimpleObject)]
@@ -52,11 +69,12 @@ impl Query {
     async fn test<'ctx>(&self, ctx: &'ctx Context<'_>) -> FieldResult<Duration> {
         let preview = ctx.data::<PreviewsSettings>()?;
 
-        match (preview.machine_rpz, preview.human_rpz) {
-            // Just an example, should use an enum
-            (true, false) => Ok(Duration::MachineDuration(MachineDuration { value_b: 12 })),
-            (false, true) => Ok(Duration::HumanDuration(HumanDuration { value_a: 12 })),
-            _ => Err("blbl".into()),
+        match preview.statut() {
+            PreviewStatut::MACHINE => {
+                Ok(Duration::MachineDuration(MachineDuration { value_b: 12 }))
+            }
+            PreviewStatut::HUMAN => Ok(Duration::HumanDuration(HumanDuration { value_a: 12 })),
+            PreviewStatut::NONE => Err("Should provide machine or human rpz".into()),
         }
     }
 }
